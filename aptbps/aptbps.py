@@ -324,7 +324,7 @@ def encode(x, bps_arrangement='random', n_bps_points=512, radius=1.5, bps_cell_t
             return x_bps
         
 def adaptive_encode(x, bps_arrangement='random', kde='gaussian', n_bps_points=512, n_parts=2, radius=1.5, bps_cell_type='dists',
-           verbose=1, random_seed=13, x_features=None, custom_basis=None, n_jobs=-1):
+           verbose=1, random_seed=13, x_features=None, custom_basis=None, n_jobs=-1, partition='triangle'):
     """Returns an APTBPS encoded cloud
 
     Parameters
@@ -341,6 +341,10 @@ def adaptive_encode(x, bps_arrangement='random', kde='gaussian', n_bps_points=51
         type of kde used.
             'gaussian': Gaussian KDE
             'fft': Gaussian FFT KDE
+    partition: str
+        how to partition input.
+            'comp': integer composition
+            'triangle': triangle numbers
     bps_cell_type: str
         type of information stored in every BPS cell. Supported:
             'dists': Euclidean distance to the nearest point in cloud
@@ -491,7 +495,6 @@ def adaptive_encode(x, bps_arrangement='random', kde='gaussian', n_bps_points=51
                 # set up tree for nearest neighbors
                 nbrs = NearestNeighbors(n_neighbors=1, leaf_size=16, algorithm="kd_tree").fit(input_density_cat[start_idx:end_idx, 0:3])
 
-                # fid_dist, npts_ix = nbrs.kneighbors(curr_basis_points, n_neighbors=(1*n_parts-1*i), return_distance=True)
                 fid_dist, npts_ix = nbrs.kneighbors(curr_basis_points, n_neighbors=1, return_distance=True)
 
                 # Need to sum start_idx+npts_ix, 
@@ -555,9 +558,9 @@ def partition_min_max(n, k, l, m):
     if k < 1:
         return
     if k == 1:
-        if n <= m and n>=l:
+        if n <= m and n >= l:
             yield (n,)
         return
-    for i in range(l,m+1):
-        for result in partition_min_max(n-i,k-1,i,m):                
+    for i in range(l, m+1):
+        for result in partition_min_max(n-i, k-1, i, m):                
             yield result+(i,)

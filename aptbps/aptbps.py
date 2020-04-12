@@ -541,3 +541,23 @@ def adaptive_encode(x, bps_arrangement='random', kde='gaussian', n_bps_points=51
         pool.close()
 
         return x_bps
+
+def partition_min_max(n, k, l, m):
+    """Partitions an integer.
+    Source: https://stackoverflow.com/a/43015372
+    
+    Arguments:
+    n: integer to partition
+    k: number of partitions to partition n into
+    l: minimum number that a partition can be
+    m: maximum number that a partition can be"""
+
+    if k < 1:
+        return
+    if k == 1:
+        if n <= m and n>=l:
+            yield (n,)
+        return
+    for i in range(l,m+1):
+        for result in partition_min_max(n-i,k-1,i,m):                
+            yield result+(i,)

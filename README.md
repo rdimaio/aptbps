@@ -1,4 +1,4 @@
-# APTBPS - Density-Adaptive Distance Encoding for Machine Learning on Point Clouds
+# APTBPS
 
 <div align="center">
 &nbsp;&nbsp;
@@ -10,10 +10,9 @@
   <a href="#related-projects">Related projects</a> •
   <a href="#contributing">Contributing</a> •
   <a href="#license">MIT License</a>
-</div>
 
-# Key features
-- Visit [aptbps-code](https://github.com/rdimaio/aptbps-code) for training and graphing code
+  - Visit [aptbps-code](https://github.com/rdimaio/aptbps-code) for training and graphing code
+</div>
 
 # Installation
 ## Requirements
@@ -63,6 +62,9 @@ x_aptbps_fftkde = aptbps.adaptive_encode(x, n_parts=8, kde='fft', partitioning='
 
 # Contributing
 Pull requests are welcome! If you would like to include/remove/change a major feature, please open an issue first.
+
+# Acknowledgement
+[BPS repository](https://github.com/sergeyprokudin/bps)
 
 # License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

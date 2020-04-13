@@ -323,8 +323,8 @@ def encode(x, bps_arrangement='random', n_bps_points=512, radius=1.5, bps_cell_t
             return x_bps
         
 def adaptive_encode(x, bps_arrangement='random', kde='gaussian', n_bps_points=512, n_parts=2, radius=1.5, bps_cell_type='dists',
-           verbose=1, random_seed=13, x_features=None, custom_basis=None, n_jobs=-1, part_method='triangle'):
-    """Returns an APTBPS encoded cloud
+           verbose=1, random_seed=13, x_features=None, custom_basis=None, n_jobs=-1, part_method='triangle', normalize=False):
+    """Returns an APTBPS encoded cloud.
 
     Parameters
     ----------
@@ -384,8 +384,11 @@ def adaptive_encode(x, bps_arrangement='random', kde='gaussian', n_bps_points=51
 
         n_clouds, n_points, n_dims = x.shape
 
-        # Partition factor for input
+        # Divide input point cloud in ~equal parts
         in_part_div = n_points//n_parts
+        in_part_idxs = []
+        for i in range(1, n_parts):
+            in_part_idxs.append(i*in_part_div)
 
         # Generate partition indexes for reference set
         partitions = []
@@ -395,7 +398,7 @@ def adaptive_encode(x, bps_arrangement='random', kde='gaussian', n_bps_points=51
             part_size = (2*n_bps_points)//(n_parts*(n_parts+1))
 
             if part_size == 0:
-                print("Error: please reduce number of partitions")
+                print("Error: please reduce number of partitions (or use part_method='comp')")
                 return
 
             # Add these points to the basis points for the first partition;
@@ -480,37 +483,17 @@ def adaptive_encode(x, bps_arrangement='random', kde='gaussian', n_bps_points=51
 
             # INPUT PARTITIONING
 
-            part_idxs = []
-
-            for i in range(1, n_parts):
-                part_idxs.append(i*in_part_div)
-
             # partition input in n_parts
-            input_density_cat = input_density_cat[np.argpartition(input_density_cat[:, 3], part_idxs)]
+            input_density_cat = input_density_cat[np.argpartition(input_density_cat[:, 3], in_part_idxs)]
 
             bps_parts = []
             fid_dists = []
 
             bps_deltas = []
             
-            # Add these points to the basis points for the first iteration;
-            # this variable will be set to 0 afer the first iteration.
-            # This makes sure that the encoded cloud will be of size n_bps_points.
-            extra_points = n_bps_points % part_size
-
-            tot_points = 0
-
-            for i in range (0, n_parts):
-                tot_points = tot_points + (n_parts-i)*part_size
-
-            tot_points = tot_points + extra_points
             basis_start_idx = 0
 
-            if tot_points is not n_bps_points:
-                extra_points = extra_points + (n_bps_points - tot_points)
-
             # ENCODING STAGE
-
             for i in range(0, n_parts):
                 start_idx = (in_part_div)*i
                 end_idx = (in_part_div) + start_idx # we lose n_parts-1 points at the end, but it's okay cause they're high density points

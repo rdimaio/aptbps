@@ -45,6 +45,9 @@ $ python setup.py install
 
 # Usage
 ```python
+import aptbps
+from bps import bps
+
 # x is a batch of point clouds in the shape [n_clouds, n_points, n_dims]
 
 # Original bps implementation

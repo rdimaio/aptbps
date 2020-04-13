@@ -4,7 +4,6 @@ import numpy as np
 from sklearn.neighbors import NearestNeighbors
 from tqdm import tqdm
 from scipy import stats
-from sklearn.neighbors import KernelDensity
 from KDEpy import FFTKDE, utils
 
 # From https://github.com/sergeyprokudin/bps
@@ -324,7 +323,7 @@ def encode(x, bps_arrangement='random', n_bps_points=512, radius=1.5, bps_cell_t
             return x_bps
         
 def adaptive_encode(x, bps_arrangement='random', kde='gaussian', n_bps_points=512, n_parts=2, radius=1.5, bps_cell_type='dists',
-           verbose=1, random_seed=13, x_features=None, custom_basis=None, n_jobs=-1, partition='triangle'):
+           verbose=1, random_seed=13, x_features=None, custom_basis=None, n_jobs=-1, part_method='triangle'):
     """Returns an APTBPS encoded cloud
 
     Parameters
@@ -341,7 +340,7 @@ def adaptive_encode(x, bps_arrangement='random', kde='gaussian', n_bps_points=51
         type of kde used.
             'gaussian': Gaussian KDE
             'fft': Gaussian FFT KDE
-    partition: str
+    part_method: str
         how to partition input.
             'comp': integer composition
             'triangle': triangle numbers
@@ -381,15 +380,46 @@ def adaptive_encode(x, bps_arrangement='random', kde='gaussian', n_bps_points=51
                           radius=radius, bps_cell_type=bps_cell_type, verbose=verbose, random_seed=random_seed,
                           x_features=x_features, custom_basis=custom_basis, n_jobs=1)
 
-        # Triangle number formula for finding the partition size
-        part_size = (2*n_bps_points)//(n_parts*(n_parts+1))
-
-        if part_size == 0:
-            print("Error: please reduce number of partitions")
-            return
+        
 
         n_clouds, n_points, n_dims = x.shape
 
+        # Partition factor for input
+        in_part_div = n_points//n_parts
+
+        # Generate partition indexes for reference set
+        partitions = []
+
+        if part_method == 'triangle':
+            # Triangle number formula for finding the partition size
+            part_size = (2*n_bps_points)//(n_parts*(n_parts+1))
+
+            if part_size == 0:
+                print("Error: please reduce number of partitions")
+                return
+
+            # Add these points to the basis points for the first partition;
+            # This makes sure that the encoded cloud will be of size n_bps_points.
+            extra = n_bps_points % part_size
+            tot_points = 0
+
+            for i in range (0, n_parts):
+                tot_points = tot_points + (n_parts-i)*part_size
+                partitions.append((n_parts-i)*part_size)
+
+            tot_points = tot_points + extra
+
+            if tot_points is not n_bps_points:
+                extra = extra + (n_bps_points - tot_points)
+
+            # Add extra points for the first partition so that total number of bps points is reached
+            partitions[0] = partitions[0] + extra
+        elif part_method == 'comp':
+            part_gen = partition_min_max(n_bps_points, n_parts, 10, 400)
+            # Get first element in generator
+            partitions = next(part_gen)
+
+        # Generate grid to evaluate FFTKDE on
         if kde == 'fft':
             fft_grid = int(np.round(np.power(n_points, 1 / n_dims)))
 
@@ -448,14 +478,14 @@ def adaptive_encode(x, bps_arrangement='random', kde='gaussian', n_bps_points=51
                 input_density = input_density.reshape(-1, 1)
                 input_density_cat = np.concatenate([coords, input_density], axis=1)
 
-            num_points = input_density_cat.shape[0]
+            # INPUT PARTITIONING
 
             part_idxs = []
 
             for i in range(1, n_parts):
-                part_idxs.append(i*num_points//n_parts)
+                part_idxs.append(i*in_part_div)
 
-            # partition in n_parts
+            # partition input in n_parts
             input_density_cat = input_density_cat[np.argpartition(input_density_cat[:, 3], part_idxs)]
 
             bps_parts = []
@@ -482,11 +512,11 @@ def adaptive_encode(x, bps_arrangement='random', kde='gaussian', n_bps_points=51
             # ENCODING STAGE
 
             for i in range(0, n_parts):
-                start_idx = (num_points//n_parts)*i
-                end_idx = (num_points//n_parts) + start_idx # we lose n_parts-1 points at the end, but it's okay cause they're high density points
+                start_idx = (in_part_div)*i
+                end_idx = (in_part_div) + start_idx # we lose n_parts-1 points at the end, but it's okay cause they're high density points
 
                 # For current iteration
-                n_curr_basis_points = (n_parts-i)*part_size + extra_points
+                n_curr_basis_points = partitions[i]
                 
                 curr_basis_points = basis_set[basis_start_idx:basis_start_idx+n_curr_basis_points]
 
@@ -506,9 +536,6 @@ def adaptive_encode(x, bps_arrangement='random', kde='gaussian', n_bps_points=51
                     bps_delta = bps_parts[i].squeeze() - curr_basis_points
                     bps_delta = bps_delta.reshape(-1, 3)
                     bps_deltas.append(bps_delta)
-
-                extra_points = 0
-
 
             bps_parts_concat = np.vstack(bps_parts)
 
@@ -534,7 +561,7 @@ def adaptive_encode(x, bps_arrangement='random', kde='gaussian', n_bps_points=51
             print("using %d available CPUs for BPS encoding.." % n_jobs)
 
         bps_adaptive_encode_func = partial(adaptive_encode, bps_arrangement=bps_arrangement, n_bps_points=n_bps_points, 
-                                  radius=radius, n_parts=n_parts, kde=kde,
+                                  radius=radius, n_parts=n_parts, kde=kde, part_method=part_method, normalize=normalize,
                                   bps_cell_type=bps_cell_type, verbose=verbose, random_seed=random_seed,
                                   x_features=x_features, custom_basis=custom_basis, n_jobs=1)
 

@@ -14,6 +14,8 @@
   - Visit [aptbps-code](https://github.com/rdimaio/aptbps-code) for training and graphing code
 </div>
 
+![](https://github.com/rdimaio/aptbps-code/blob/master/graphing/animation/aptbps-stills.gif)
+
 # Installation
 ## Requirements
 - Python 3.x

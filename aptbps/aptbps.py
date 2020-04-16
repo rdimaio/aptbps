@@ -322,7 +322,7 @@ def encode(x, bps_arrangement='random', n_bps_points=512, radius=1.5, bps_cell_t
         else:
             return x_bps
         
-def adaptive_encode(x, bps_arrangement='random', kde='gaussian', n_bps_points=512, n_parts=2, radius=1.5, bps_cell_type='dists',
+def adaptive_encode(x, bps_arrangement='random', kde_method='gaussian', n_bps_points=512, n_parts=2, radius=1.5, bps_cell_type='dists',
            verbose=1, random_seed=13, x_features=None, custom_basis=None, n_jobs=-1, part_method='triangle', normalize=False):
     """Returns an APTBPS encoded cloud.
 
@@ -336,8 +336,8 @@ def adaptive_encode(x, bps_arrangement='random', kde='gaussian', n_bps_points=51
         number of basis points
     radius: float
         radius for BPS sampling area
-    kde: str
-        type of kde used.
+    kde_method: str
+        kde method used.
             'gaussian': Gaussian KDE
             'fft': Gaussian FFT KDE
     part_method: str
@@ -423,7 +423,7 @@ def adaptive_encode(x, bps_arrangement='random', kde='gaussian', n_bps_points=51
             partitions = next(part_gen)
 
         # Generate grid to evaluate FFTKDE on
-        if kde == 'fft':
+        if kde_method == 'fft':
             fft_grid = int(np.round(np.power(n_points, 1 / n_dims)))
 
         if bps_arrangement == 'random':
@@ -461,7 +461,7 @@ def adaptive_encode(x, bps_arrangement='random', kde='gaussian', n_bps_points=51
 
         for fid in fid_lst:
             
-            if kde == 'gaussian':
+            if kde_method == 'gaussian':
                 try:
                     kde = stats.gaussian_kde(x[fid].T)
                 except np.linalg.LinAlgError:
@@ -476,7 +476,7 @@ def adaptive_encode(x, bps_arrangement='random', kde='gaussian', n_bps_points=51
 
                 input_density_cat = np.concatenate([x[fid], input_density], axis=1)
             
-            elif kde == 'fft':
+            elif kde_method == 'fft':
                 coords, input_density = FFTKDE(kernel="gaussian", bw=1E-4).fit(x[fid]).evaluate(fft_grid+1)
                 input_density = input_density.reshape(-1, 1)
                 input_density_cat = np.concatenate([coords, input_density], axis=1)
@@ -544,7 +544,7 @@ def adaptive_encode(x, bps_arrangement='random', kde='gaussian', n_bps_points=51
             print("using %d available CPUs for BPS encoding.." % n_jobs)
 
         bps_adaptive_encode_func = partial(adaptive_encode, bps_arrangement=bps_arrangement, n_bps_points=n_bps_points, 
-                                  radius=radius, n_parts=n_parts, kde=kde, part_method=part_method, normalize=normalize,
+                                  radius=radius, n_parts=n_parts, kde_method=kde_method, part_method=part_method, normalize=normalize,
                                   bps_cell_type=bps_cell_type, verbose=verbose, random_seed=random_seed,
                                   x_features=x_features, custom_basis=custom_basis, n_jobs=1)
 

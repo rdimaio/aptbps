@@ -496,7 +496,7 @@ def adaptive_encode(x, bps_arrangement='random', kde_method='gaussian', n_bps_po
             # ENCODING STAGE
             for i in range(0, n_parts):
                 start_idx = (in_part_div)*i
-                end_idx = (in_part_div) + start_idx # we lose n_parts-1 points at the end, but it's okay cause they're high density points
+                end_idx = (in_part_div) + start_idx
 
                 # For current iteration
                 n_curr_basis_points = partitions[i]

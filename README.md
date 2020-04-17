@@ -62,6 +62,10 @@ x_aptbps_fftkde = aptbps.adaptive_encode(x, n_parts=8, kde='fft', partitioning='
 
 ```
 
+# Resources
+- [Pre-trained models](https://drive.google.com/open?id=198OyZhesh8bAljNCLjvBB9_TMWJurnC1)
+- [Pre-encoded data](https://drive.google.com/open?id=1PN-kQVoee8pS-56wpHLUuWMR0aoFwLVU)
+
 # Contributing
 Pull requests are welcome! If you would like to include/remove/change a major feature, please open an issue first.
 

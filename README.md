@@ -1,18 +1,6 @@
 # APTBPS
 
-<div align="center">
-&nbsp;&nbsp;
-
-  <a href="#key-features">Key Features</a> •
-  <a href="#supported-formats">Supported Formats</a> •
-  <a href="#installation">Installation</a> •
-  <a href="#usage">Usage</a> •
-  <a href="#related-projects">Related projects</a> •
-  <a href="#contributing">Contributing</a> •
-  <a href="#license">MIT License</a>
-
-  - Visit [aptbps-code](https://github.com/rdimaio/aptbps-code) for training and graphing code
-</div>
+- Visit [aptbps-code](https://github.com/rdimaio/aptbps-code) for training and graphing code
 
 ![](https://github.com/rdimaio/aptbps-code/blob/master/graphing/animation/aptbps-stills.gif)
 
